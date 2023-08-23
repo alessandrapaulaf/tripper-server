@@ -1,0 +1,21 @@
+version: '3.8'
+
+services:
+  nestjs:
+    container_name: core-server
+    env_file:
+      - ./src/env/.env.staging
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    command: node dist/main
+    ports:
+      - 3000:3000
+    networks:
+      - nesjs-network
+    volumes:
+      - .:/usr/src/app
+      - /usr/src/app/node_modules
+    restart: unless-stopped
+networks:
+  nesjs-network:
