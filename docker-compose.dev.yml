@@ -1,6 +1,17 @@
 version: '3.8'
 
 services:
+  database:
+    image: postgres
+    container_name: postgres
+    environment:
+      POSTGRES_USER: pguser
+      POSTGRES_PASSWORD: pgpassword
+    ports:
+      - "5432:5432"
+    volumes:
+      - pg-data:/var/lib/postgresql/data
+      
   nestjs:
     container_name: core-server
     env_file:
@@ -11,11 +22,18 @@ services:
     command: npm run start:debug
     ports:
       - 3000:3000
-    networks:
-      - nesjs-network
     volumes:
       - .:/usr/src/app
       - /usr/src/app/node_modules
     restart: unless-stopped
-networks:
-  nesjs-network:
+    depends_on:
+      - database
+
+  adminer:
+    image: adminer
+    restart: always
+    ports:
+      - 8080:8080
+
+volumes:
+  pg-data:
