@@ -1,7 +1,9 @@
 import { HttpException, HttpStatus, Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, Repository } from 'typeorm';
+import { CreateUserDto } from '../dtos/create-user.dto';
 import { User } from '../entities/user.entity';
+import { v4 as uuidv4 } from 'uuid';
 
 @Injectable()
 export class UsersService {
@@ -10,8 +12,17 @@ export class UsersService {
     private usersRepository: Repository<User>,
     private dataSource: DataSource,
   ) {}
+  private logger = new Logger('UsersService');
 
-  async create(user: User): Promise<User> {
+  async create(userDto: CreateUserDto): Promise<User> {
+    const firstName = userDto.fullName.split(' ')[0];
+    const user: User = {
+      ...userDto,
+      id: uuidv4(),
+      firstName,
+      isActive: false,
+    };
+
     const queryRunner = this.dataSource.createQueryRunner();
 
     await queryRunner.connect();
@@ -24,7 +35,7 @@ export class UsersService {
 
       return userCreated;
     } catch (err) {
-      Logger.error(err);
+      this.logger.error(err);
       // since we have errors lets rollback the changes we made
       await queryRunner.rollbackTransaction();
       throw new HttpException(String(err), HttpStatus.BAD_REQUEST);
@@ -38,11 +49,11 @@ export class UsersService {
     return this.usersRepository.find();
   }
 
-  findOne(id: number): Promise<User | null> {
+  findOne(id: string): Promise<User | null> {
     return this.usersRepository.findOneBy({ id });
   }
 
-  async remove(id: number): Promise<void> {
+  async remove(id: string): Promise<void> {
     await this.usersRepository.delete(id);
   }
 }
