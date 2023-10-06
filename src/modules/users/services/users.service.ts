@@ -14,7 +14,7 @@ export class UsersService {
   ) {}
   private logger = new Logger('UsersService');
 
-  async create(userDto: CreateUserDto): Promise<User> {
+  async create(userDto: CreateUserDto): Promise<{ id: string }> {
     const firstName = userDto.fullName.split(' ')[0];
     const user: User = {
       ...userDto,
@@ -33,7 +33,7 @@ export class UsersService {
       await queryRunner.manager.save(userCreated);
       await queryRunner.commitTransaction();
 
-      return userCreated;
+      return { id: userCreated.id };
     } catch (err) {
       this.logger.error(err);
       // since we have errors lets rollback the changes we made
