@@ -1,20 +1,19 @@
 import { HttpException, HttpStatus, Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { DataSource, Repository } from 'typeorm';
 import { CreateUserDto } from '../dtos/create-user.dto';
 import { User } from '../entities/user.entity';
 import { v4 as uuidv4 } from 'uuid';
+import { Repository } from 'typeorm';
 
 @Injectable()
 export class UsersService {
   constructor(
     @InjectRepository(User)
     private usersRepository: Repository<User>,
-    private dataSource: DataSource,
   ) {}
   private logger = new Logger('UsersService');
 
-  async create(userDto: CreateUserDto): Promise<{ id: string }> {
+  async create(userDto: CreateUserDto): Promise<User | null> {
     const firstName = userDto.fullName.split(' ')[0];
     const user: User = {
       ...userDto,
@@ -23,26 +22,18 @@ export class UsersService {
       isActive: false,
     };
 
-    const queryRunner = this.dataSource.createQueryRunner();
+    const alreadyRegisteredUser = await this.usersRepository.findBy({
+      email: userDto.email,
+    });
 
-    await queryRunner.connect();
-    await queryRunner.startTransaction();
-    try {
-      const userCreated = queryRunner.manager.create(User, user);
-
-      await queryRunner.manager.save(userCreated);
-      await queryRunner.commitTransaction();
-
-      return { id: userCreated.id };
-    } catch (err) {
-      this.logger.error(err);
-      // since we have errors lets rollback the changes we made
-      await queryRunner.rollbackTransaction();
-      throw new HttpException(String(err), HttpStatus.BAD_REQUEST);
-    } finally {
-      // you need to release a queryRunner which was manually instantiated
-      await queryRunner.release();
+    if (alreadyRegisteredUser) {
+      throw new HttpException(
+        'Already Registered User!',
+        HttpStatus.BAD_REQUEST,
+      );
     }
+
+    return this.usersRepository.create(user);
   }
 
   findAll(): Promise<User[]> {
