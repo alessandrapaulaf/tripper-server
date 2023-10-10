@@ -1,9 +1,12 @@
+import * as bcrypt from 'bcrypt';
+import { v4 as uuidv4 } from 'uuid';
+import { Repository, UpdateResult } from 'typeorm';
 import { HttpException, HttpStatus, Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { CreateUserDto } from '../dtos/create-user.dto';
 import { User } from '../entities/user.entity';
-import { v4 as uuidv4 } from 'uuid';
-import { Repository } from 'typeorm';
+
+const saltOrRounds = 10;
 
 @Injectable()
 export class UsersService {
@@ -13,16 +16,10 @@ export class UsersService {
   ) {}
   private logger = new Logger('UsersService');
 
-  async create(userDto: CreateUserDto): Promise<User | null> {
-    const firstName = userDto.fullName.split(' ')[0];
-    const user: User = {
-      ...userDto,
-      id: uuidv4(),
-      firstName,
-      isActive: false,
-    };
+  async create(userDto: CreateUserDto): Promise<void> {
+    const { fullName, email, password } = userDto;
 
-    const alreadyRegisteredUser = await this.usersRepository.findBy({
+    const alreadyRegisteredUser = await this.usersRepository.findOneBy({
       email: userDto.email,
     });
 
@@ -33,7 +30,20 @@ export class UsersService {
       );
     }
 
-    return this.usersRepository.create(user);
+    const firstName = fullName.split(' ')[0];
+    const hash = await bcrypt.hash(password, saltOrRounds);
+
+    const user: User = {
+      id: uuidv4(),
+      firstName,
+      fullName,
+      email,
+      hash,
+      isActive: false,
+    };
+
+    const created = this.usersRepository.create(user);
+    this.usersRepository.save(created);
   }
 
   findAll(): Promise<User[]> {
@@ -42,6 +52,14 @@ export class UsersService {
 
   findOne(id: string): Promise<User | null> {
     return this.usersRepository.findOneBy({ id });
+  }
+
+  findByEmail(email: string): Promise<User | null> {
+    return this.usersRepository.findOneBy({ email });
+  }
+
+  update(id: string, user: Partial<User>): Promise<UpdateResult | null> {
+    return this.usersRepository.update({ id }, user);
   }
 
   async remove(id: string): Promise<void> {
