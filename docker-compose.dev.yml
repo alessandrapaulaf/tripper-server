@@ -13,10 +13,11 @@ services:
       - pg-data:/var/lib/postgresql/data
 
   mongodb:
-    image: mongo:latest
+    image: mongo
+    restart: always
     container_name: mongodb
     ports:
-      - "27017:27017"
+      - 27017:27017
     volumes:
       - ./data:/data/db
     environment:
@@ -24,7 +25,7 @@ services:
       MONGO_INITDB_ROOT_PASSWORD: mypassword
       
   nestjs:
-    container_name: core-server
+    container_name: server
     env_file:
       - ./src/env/.env.development
     build:
@@ -42,6 +43,7 @@ services:
 
   adminer:
     image: adminer
+    container_name: db-adminer
     restart: always
     ports:
       - 8080:8080
