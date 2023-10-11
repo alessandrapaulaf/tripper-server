@@ -11,6 +11,17 @@ services:
       - "5432:5432"
     volumes:
       - pg-data:/var/lib/postgresql/data
+
+  mongodb:
+    image: mongo:latest
+    container_name: mongodb
+    ports:
+      - "27017:27017"
+    volumes:
+      - ./data:/data/db
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: myuser
+      MONGO_INITDB_ROOT_PASSWORD: mypassword
       
   nestjs:
     container_name: core-server
@@ -27,6 +38,7 @@ services:
       - /usr/src/app/node_modules
     depends_on:
       - database
+      - mongodb
 
   adminer:
     image: adminer
