@@ -7,12 +7,14 @@ import { DataSource } from 'typeorm';
 import { AuthModule } from './modules/auth/auth.module';
 import { MongooseModule } from '@nestjs/mongoose';
 import { AppConfig } from './config/constants.config';
+import { ItinerariesModule } from './modules/itineraries/itineraries.module';
 
 @Module({
   imports: [
     TypeOrmModule.forRoot(typeOrmConfig),
     MongooseModule.forRoot(AppConfig.mongoUrl, { dbName: AppConfig.appName }),
     AuthModule,
+    ItinerariesModule,
   ],
   controllers: [AppController],
   providers: [AppService],
