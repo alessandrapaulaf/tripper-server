@@ -18,7 +18,7 @@ export class Itinerary {
   endDate?: Date;
 
   @Prop()
-  destination: [];
+  destinations: [];
 }
 
 export const ItinerarySchema = SchemaFactory.createForClass(Itinerary);

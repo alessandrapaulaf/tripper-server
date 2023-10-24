@@ -1,11 +1,22 @@
 import {
   IsArray,
   IsDate,
+  IsNumber,
+  IsObject,
+  IsOptional,
   IsString,
   MinDate,
   MinLength,
   ValidateNested,
 } from 'class-validator';
+
+class CreateCoordinatesDto {
+  @IsNumber()
+  latitude: string;
+
+  @IsNumber()
+  longitude: string;
+}
 
 class CreateDestinationDto {
   @IsString()
@@ -20,6 +31,10 @@ class CreateDestinationDto {
   @MinDate(new Date())
   departureDate: Date;
 
+  @IsObject()
+  @ValidateNested()
+  coordinates: CreateCoordinatesDto;
+
   @IsArray()
   attractions: string[];
 }
@@ -29,15 +44,16 @@ export class CreateItineraryDto {
   @MinLength(1)
   name: string;
 
-  @IsDate()
-  @MinDate(new Date())
-  startDate: Date;
+  @IsString()
+  @MinLength(1)
+  startDate: string;
 
-  @IsDate()
-  @MinDate(new Date())
-  endDate: Date;
+  @IsString()
+  @MinLength(1)
+  endDate: string;
 
   @IsArray()
   @ValidateNested()
-  destinations: CreateDestinationDto[];
+  @IsOptional()
+  destinations?: CreateDestinationDto[];
 }
